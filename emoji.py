@@ -1,6 +1,7 @@
 #!python2.7
-from datetime import datetime
+import sys
 from emoji import UNICODE_EMOJI
+from datetime import datetime, timedelta
 
 import requests
 
@@ -9,17 +10,17 @@ import dialogs
 
 class Emoji(object):
 	
-	def __init__(self):
+	def __init__(self, text):
 		
 		self.start = datetime.utcnow()
-		self.name = dialogs.input_alert("Gimme Emoji")
+		self.name = text
 		self.user = 1
-		self.end = None
+		self.end = self.start + timedelta(minutes=15)
 		self.logged = False
 		
 		if not self.is_emoji:
-			print("Given text is not an Emoji.")
-			dialogs.alert("Not an Emoji!")
+			print("'%s' is not an Emoji." % self.name)
+			#dialogs.alert("'%s' is not an Emoji." % self.name)
 	
 	
 	@property
@@ -39,7 +40,7 @@ class Emoji(object):
 			return self.logged
 		
 		response = requests.post(
-			url = "https://life-timelines.herokuapp.com/emoji-check-in",
+			url = "https://life-timelines.herokuapp.com/log-emoji",
 			data = {
 				"name": self.name,
 				"start": self.start,
@@ -47,7 +48,7 @@ class Emoji(object):
 				"user": self.user,
 			})
 		
-		if response.status_code == 200:
+		if response.status_code == 201:
 			print(response.text)
 			self.logged = True
 		
@@ -57,8 +58,13 @@ class Emoji(object):
 
 if __name__ == "__main__":
 	
-	a = Emoji()
+	text = dialogs.input_alert("Gimme Emoji (separate by spaces)").split(" ")
 	
-	print(a.name)
+	for word in text:
+		a = Emoji(word)
 	
-	a.log()
+		print(a.name)
+	
+		print(a.log())
+		
+	sys.exit()
